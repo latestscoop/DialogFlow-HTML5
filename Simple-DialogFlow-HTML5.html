@@ -71,7 +71,7 @@
 				headers: {
 					"Authorization": "Bearer " + accessToken
 				},
-				data: JSON.stringify({ query: text, lang: "en", sessionId: "somerandomthing" }),
+				data: JSON.stringify({ query: text, lang: "en", sessionId: "SOMETHINGRANDOM" }),
 				success: function(data) {
 					var respText = data.result.fulfillment.speech;
 					console.log("Respuesta: " + respText);
