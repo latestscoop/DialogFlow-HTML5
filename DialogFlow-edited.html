@@ -1,0 +1,121 @@
+<html>
+<!--https://gist.github.com/Gugic/cfc008599fa9a82eeba4127648009132#gistcomment-2237466-->
+<head>
+	<title>DialogFlow API Example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script type="text/javascript">
+		var accessToken ="INSERT DIALOGFLOW ACCESS TOKEN HERE";
+		var baseUrl = "https://api.dialogflow.com/v1/";
+		$(document).ready(function() {
+			$("#botInput").keypress(function(event) {
+				if (event.which == 13) {
+					event.preventDefault();
+					send();
+					this.value = '';
+				}
+			});
+			$("#botRec").click(function(event) {
+				switchRecognition();
+			});
+		});
+		var recognition;
+		function startRecognition() {
+			recognition = new webkitSpeechRecognition();
+			recognition.onstart = function(event) {
+				updateRec();
+			};
+			recognition.onresult = function(event) {
+				var text = "";
+				for (var i = event.resultIndex; i < event.results.length; ++i) {
+					text += event.results[i][0].transcript;
+				}
+				setInput(text);
+				stopRecognition();
+			};
+			recognition.onend = function() {
+				stopRecognition();
+			};
+			recognition.lang = "en-US";
+			recognition.start();
+		}
+		function stopRecognition() {
+			if (recognition) {
+				recognition.stop();
+				recognition = null;
+			}
+			updateRec();
+		}
+		function switchRecognition() {
+			if (recognition) {
+				stopRecognition();
+			} else {
+				startRecognition();
+			}
+		}
+		function setInput(text) {
+			$("#botInput").val(text);
+			send();
+		}
+		function updateRec() {
+			$("#botRec").text(recognition ? "Stop" : "Talk");
+		}
+		function send() {
+			var text = $("#botInput").val();
+			conversation.push('<span class="botReplyUser"><span class="botIdUser">Me:</span><span class="botMsgUser">' + text + '</span></span>'); //div
+			$.ajax({
+				type: "POST",
+				url: baseUrl + "query?v=20150910",
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				headers: {
+					"Authorization": "Bearer " + accessToken
+				},
+				data: JSON.stringify({ query: text, lang: "en", sessionId: "somerandomthing" }),
+				success: function(data) {
+					var respText = data.result.fulfillment.speech;
+					console.log("Respuesta: " + respText);
+					setResponse(respText);
+				},
+				error: function() {
+					setResponse("Internal Server Error");
+				}
+			});
+		}
+		function setResponse(val) {
+			conversation.push('<span class="botReplyBot"><span class="botIdBot">sAmI:</span><span class="botMsgBot">' + val + '</span></span>'); //div
+			$("#response").html(conversation.join("")); //div
+			$("#response-container").scrollTop($("#response").height());
+			$("#response .botReplyUser").removeClass("botReplyUserCurrent");
+			$("#response .botReplyUser").last().addClass("botReplyUserCurrent");
+			$("#response .botReplyBot").removeClass("botReplyBotCurrent");
+			$("#response .botReplyBot").last().addClass("botReplyBotCurrent");
+		}
+		var conversation = [];
+	</script>
+	<style type="text/css">
+		.bot{width:340px; height:340px; padding:5px; border-radius:5px; border:1px solid #eee; background:#fff; overflow:hidden;}
+		.bot #response-container{width:calc(100% + 50px); height:280px; overflow-x:hidden; overflow-y:auto;}
+		.bot #response{width:340px;}
+		.bot .botReplyUser{display:block; width:calc(100% - 10px); padding:5px; border-radius:5px; background:#eee; color:#888; margin-bottom:5px;}
+		.bot .botReplyBot{display:block; width:calc(100% - 12px); padding:5px; border-radius:5px; border:1px solid #eee; background:#fff; color:#888; margin-bottom:5px;}
+		.bot .botReplyUserCurrent{color:#555; background:#ddd;}
+		.bot .botReplyBotCurrent{color:#555;}
+		.bot .botIdUser{display:none; }
+		.bot .botIdBot{display:none; }
+		.bot .botMsgUser{display:inline-block; }
+		.bot .botMsgBot{display:inline-block; }
+		.bot #botInput{display:inline-block; width:290px; height:40px; padding:5px; border-radius:5px; border:1px solid #eee; line-height:30px; margin-right:10px;}
+		.bot #botRec{display:inline-block; width:40px; height:40px; border-radius:5px; border:1px solid #eee; background:#fff;}
+	</style>
+</head>
+<body>
+	<div class="bot">
+  		<div id="response-container">
+  			<div id="response"></div>
+		</div>
+ 		<br />
+    	<input id="botInput" type="text" placeholder="Hi, how can I help?" autocomplete="off" /><button id="botRec">Talk</button>
+	</div>
+</body>
+</html>
