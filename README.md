@@ -1,4 +1,4 @@
-# DialogFlow-HTML5
+# DialogFlow Chatbot
 A simple chatbot using Google DialogFlow API
 
 Log into DialogFlow and visit the console.
